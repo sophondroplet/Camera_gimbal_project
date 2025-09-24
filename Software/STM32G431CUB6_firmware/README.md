@@ -7,7 +7,8 @@ What it implements
 - MPU6050 IMU driver (I2C, DMA read) with simple complementary filter fusion (see `Core/Src/MPU6050.c` and `MPU6050_D.c`).
 - PWM encoder reading using TIM2 input capture to measure duty cycle and derive absolute rotor angle (used like an AS5048A PWM output).
 - Simple PID controller on pitch/angle that computes a torque command which is converted to 3-phase PWM values using inverse Park/Clarke (`main.c`).
-- UART-based live PID tuning via ASCII `P,D\n` commands.
+- UART-based live PID tuning via ASCII `P,D\n` commands (existing behaviour).
+- Optional host-driven audio: the host `music_streamer.py` can stream `FREQ/AMP` commands to the MCU to play music on the motor (see `Software/UART_music_streamer/` README for host-side details). The firmware must accept `FREQ:...,AMP:...` lines or you must add a small parser to convert these commands into internal variables.
 - Small music/tone generator that toggles torque with `TIM6` to play notes (see `Core/Inc/music.h` and `Core/Src/music.c`).
 
 Wiring (conceptual)
@@ -32,6 +33,7 @@ Runtime / Tuning
 - By default the firmware listens on USART2 for ASCII lines ending in `\n`.
 - Send `P,D\n` where `P` and `D` are floating point numbers (no spaces required). Example: `0.5,0.02\n`.
 - The firmware echoes the received string and updates the running P and D gains immediately.
+- To support `music_streamer.py` you can add a small `FREQ/AMP` parser (see the UART_music_streamer README for a suggested parsing approach). The parsed frequency and amplitude should be safely clamped in firmware before use.
 
 Calibration and safety checklist
 - Start with motors disconnected or use a bench load.
@@ -45,4 +47,7 @@ Files of interest
 - `Core/Src/main.c` – main loop, PID and motor output conversions.
 - `Core/Src/MPU6050.c`, `MPU6050_D.c` – IMU drivers.
 - `Core/Inc/music.h`, `Core/Src/music.c` – simple tone generator used for debugging.
+
+Licenses
+- STM32 HAL and CMSIS code under their included licenses (see `Drivers/`).
 

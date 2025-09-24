@@ -1,31 +1,76 @@
 UART Music Streamer
 ===================
 
-This folder is intended to hold small host-side utilities to interact with the gimbal firmware over UART. The firmware accepts ASCII lines of the form `P,D\n` to update PID gains live and echoes received commands. It also toggles torque for a music generator exposed through `TIM6`.
+This folder contains `music_streamer.py`, a host-side utility that converts MIDI files (or simple test scales) into realtime motor frequency/torque commands and streams them to the STM32 firmware over a serial link.
 
-Planned / existing scripts
-- `music_streamer.py` — (currently empty) a simple Python/pyserial script would be useful to send sequences of PID updates or play notes by changing `prescaler` values over UART.
+What the script does
+- Parses MIDI files using `mido` and converts note_on/note_off events into a time-series of (frequency, amplitude) samples.
+- Streams those samples at a configurable sample rate to the MCU using an ASCII protocol: `FREQ:<frequency>,AMP:<amplitude>\n` (example: `FREQ:440.00,AMP:0.150\n`).
+- Provides a `--scale` test mode to play a C major scale for quick hardware verification.
 
-How to create a quick helper (example)
-1. Install Python 3.8+ and pyserial: `pip install pyserial`
-2. Use a script like below (replace COM port / baud rate):
+Dependencies
+- Python 3.8+
+- pyserial
+- mido
+- numpy
 
-```python
-import serial
-import time
+Install (Windows PowerShell example):
 
-ser = serial.Serial('COM3', 115200, timeout=1)
-
-# Set P and D
-ser.write(b'0.5,0.01\n')
-time.sleep(0.1)
-
-# Play a sequence of gains
-for p in [0.2, 0.4, 0.6]:
-    ser.write(f"{p},0.01\n".encode())
-    time.sleep(0.5)
-
-ser.close()
+```powershell
+python -m pip install --user pyserial mido numpy
 ```
 
-If you want, I can implement `music_streamer.py` here to provide a friendly CLI for sending gains, streaming note sequences, and logging MCU responses.
+Usage
+- Play a MIDI file over serial:
+
+```powershell
+python .\music_streamer.py --port COM3 --baud 115200 path\to\file.mid
+```
+
+- Play a test scale:
+
+```powershell
+python .\music_streamer.py --port COM3 --baud 115200 --scale
+```
+
+Serial protocol emitted by the script
+- ASCII line per sample terminated with `\n`.
+- Format: `FREQ:<frequency_Hz>,AMP:<amplitude_0_to_1>\n`
+- Example: `FREQ:440.00,AMP:0.150\n`
+
+Compatibility and firmware notes
+- The `music_streamer.py` script sends `FREQ/AMP` command lines. The firmware in `Software/STM32G431CUB6_firmware` originally parsed `P,D\n` for PID tuning. To use `music_streamer.py` directly you must run firmware that accepts `FREQ/AMP` lines or add a small firmware parser that maps frequency/amplitude to the motor control variables.
+
+Suggested minimal firmware parsing approach
+1) Add globals to share the host command (example in a new header `Core/Inc/music_cmd.h`):
+
+```c
+// Example globals
+extern float host_command_frequency_hz; // Hz
+extern float host_command_amplitude;    // 0..1
+extern volatile uint8_t host_command_new; // flag set when new command arrives
+```
+
+2) In your UART handler (or a small command processing task) parse `FREQ:` lines. Example pseudocode for a simple parser:
+
+```c
+void process_serial_line(char *line){
+    float f = 0.0f, a = 0.0f;
+    if (sscanf(line, "FREQ:%f,AMP:%f", &f, &a) == 2){
+        if (f < 0.0f) f = 0.0f;
+        if (a < 0.0f) a = 0.0f;
+        if (a > 1.0f) a = 1.0f;
+
+        host_command_frequency_hz = f;
+        host_command_amplitude = a;
+        host_command_new = 1;
+    }
+}
+```
+
+3) Consume `host_command_new` in a safe, periodic context and map frequency to a timer prescaler or to a torque variable. Be conservative with amplitude and frequency limits when driving a motor.
+
+Safety
+- The script includes host-side frequency/amplitude constraints, but you should also enforce safe limits in firmware and test with the motor disconnected first.
+
+If you want, I can add the small MCU-side parser and a safe mapping from frequency to `TIM6` prescaler or torque variable — say the word and I will implement it.
