@@ -1,0 +1,9 @@
+../Core/Src/MPU6050_D.c:10:9:MPU6050_Initialize	3
+../Core/Src/MPU6050_D.c:101:19:MPU6050_Read_DMA	1
+../Core/Src/MPU6050_D.c:111:6:MPU6050_Process_DMA_Data	1
+../Core/Src/MPU6050_D.c:138:19:MPU6050_Read_Temperature	1
+../Core/Src/MPU6050_D.c:150:19:MPU6050_Read_Accelerometer	1
+../Core/Src/MPU6050_D.c:169:19:MPU6050_Read_Gyroscope	1
+../Core/Src/MPU6050_D.c:188:19:MPU6050_Read_Register	1
+../Core/Src/MPU6050_D.c:193:19:MPU6050_Read_Registers	1
+../Core/Src/MPU6050_D.c:198:19:MPU6050_Write_Register	1

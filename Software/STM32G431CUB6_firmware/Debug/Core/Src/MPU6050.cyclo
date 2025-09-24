@@ -1,0 +1,4 @@
+../Core/Src/MPU6050.c:30:6:MPU6050_calc_drift	2
+../Core/Src/MPU6050.c:65:19:MPU6050_init	1
+../Core/Src/MPU6050.c:108:19:MPU6050_read_DMA_data	1
+../Core/Src/MPU6050.c:115:6:MPU6050_process_data	1

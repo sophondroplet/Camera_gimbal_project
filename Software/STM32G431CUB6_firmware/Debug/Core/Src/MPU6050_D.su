@@ -1,0 +1,9 @@
+../Core/Src/MPU6050_D.c:10:9:MPU6050_Initialize	24	static
+../Core/Src/MPU6050_D.c:101:19:MPU6050_Read_DMA	32	static
+../Core/Src/MPU6050_D.c:111:6:MPU6050_Process_DMA_Data	32	static
+../Core/Src/MPU6050_D.c:138:19:MPU6050_Read_Temperature	24	static
+../Core/Src/MPU6050_D.c:150:19:MPU6050_Read_Accelerometer	32	static
+../Core/Src/MPU6050_D.c:169:19:MPU6050_Read_Gyroscope	32	static
+../Core/Src/MPU6050_D.c:188:19:MPU6050_Read_Register	40	static
+../Core/Src/MPU6050_D.c:193:19:MPU6050_Read_Registers	40	static
+../Core/Src/MPU6050_D.c:198:19:MPU6050_Write_Register	40	static
